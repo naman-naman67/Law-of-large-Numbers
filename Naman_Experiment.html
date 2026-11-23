@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#101827">
+<title>Probability Lab | Law of Large Numbers</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1220;--panel:#131e30;--panel2:#1a2940;--text:#edf4ff;--muted:#9aabc2;--accent:#72e0c1;--blue:#7ca8ff;--border:#293951}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% -20%,#203756 0%,var(--bg) 55%);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);padding:28px 16px 50px}
+main{max-width:1000px;margin:auto}
+header{text-align:center;margin:12px 0 28px}
+.eyebrow{color:var(--accent);font-size:.75rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase}
+h1{font-size:clamp(2rem,6vw,3.3rem);margin:10px 0 8px;letter-spacing:-.045em}
+.subtitle{color:var(--muted);margin:0;line-height:1.6}
+.layout{display:grid;grid-template-columns: minmax(260px,.85fr) minmax(0,1.4fr);gap:18px;align-items:stretch}
+.card{background:linear-gradient(145deg,rgba(25,39,60,.96),rgba(16,27,43,.96));border:1px solid var(--border);border-radius:22px;padding:22px;box-shadow:0 18px 45px #0002}
+.roll-card{display:flex;flex-direction:column;align-items:center;text-align:center;justify-content:center;min-height:440px}
+.die-wrap{perspective:700px;margin:24px 0 18px}
+.die{width:142px;height:142px;border-radius:25px;background:linear-gradient(145deg,#fff,#dce7f5);box-shadow:inset -8px -9px 18px #aebed2, inset 7px 7px 14px #fff,0 18px 35px #0006;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:19px;gap:7px;cursor:pointer;transform:rotate(-7deg);transition:transform .18s,filter .18s;user-select:none}
+.die:hover{transform:rotate(0) scale(1.04);filter:brightness(1.04)}
+.die:active{transform:rotate(5deg) scale(.94)}
+.pip{width:19px;height:19px;border-radius:50%;background:#17243a;align-self:center;justify-self:center;box-shadow:inset 2px 2px 3px #0007}
+.hidden{visibility:hidden}
+@keyframes tumble{0%{transform:rotate(-7deg) scale(1)}35%{transform:rotate(100deg) scale(.86)}70%{transform:rotate(260deg) scale(1.06)}100%{transform:rotate(353deg) scale(1)}}
+.rolling{animation:tumble .42s ease}
+button{font:inherit;border:0;cursor:pointer;border-radius:13px;font-weight:750;transition:transform .15s,filter .15s}
+button:hover{filter:brightness(1.08);transform:translateY(-1px)}
+button:active{transform:translateY(1px)}
+.primary{background:var(--accent);color:#092019;padding:14px 25px;min-width:180px;box-shadow:0 8px 22px #72e0c128}
+.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--border);padding:11px 16px}
+.last{color:var(--muted);font-size:.9rem;margin:15px 0 0}
+.last strong{color:var(--text)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
+.stat{background:#0d1828;border:1px solid var(--border);border-radius:15px;padding:14px}
+.stat small{display:block;color:var(--muted);font-size:.75rem;margin-bottom:6px}
+.stat strong{font-size:1.5rem;font-variant-numeric:tabular-nums}
+.section-title{font-size:1.05rem;margin:0 0 14px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th{text-align:right;color:var(--muted);font-size:.76rem;font-weight:700;padding:10px 8px;border-bottom:1px solid var(--border)}
+th:first-child,td:first-child{text-align:left}
+td{text-align:right;padding:12px 8px;border-bottom:1px solid #29395188;font-variant-numeric:tabular-nums}
+tbody tr:last-child td{border-bottom:0}
+.face{font-size:1.2rem;margin-right:7px}
+.theory{color:var(--blue)}
+.experimental{color:var(--accent);font-weight:750}
+.graph-card{margin-top:18px}
+.graph-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:12px}
+.legend{display:flex;gap:14px;color:var(--muted);font-size:.75rem;flex-wrap:wrap}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+canvas{width:100%;height:250px;display:block}
+.note{margin-top:18px;color:var(--muted);font-size:.88rem;line-height:1.65}
+.note strong{color:var(--text)}
+.progress{height:8px;background:#0b1422;border-radius:20px;overflow:hidden;margin-top:12px}
+.progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--accent));transition:width .25s}
+.footer{text-align:center;color:#73849c;font-size:.75rem;margin-top:22px}
+@media(max-width:720px){.layout{grid-template-columns:1fr}.roll-card{min-height:350px}.stats{gap:7px}.stat{padding:11px 8px}.stat strong{font-size:1.25rem}.card{padding:18px}canvas{height:220px}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <div class="eyebrow">Interactive probability experiment</div>
+  <h1>Probability Lab <span aria-hidden="true">🎲</span></h1>
+  <p class="subtitle">Explore the Law of Large Numbers by rolling a fair six-sided die.</p>
+</header>
+<div class="layout">
+  <section class="card roll-card" aria-label="Dice roller">
+    <div class="eyebrow">Your experiment</div>
+    <div class="die-wrap">
+      <div class="die" id="die" role="button" tabindex="0" aria-label="Roll the dice">
+        <i class="pip hidden"></i><i class="pip hidden"></i><i class="pip hidden"></i>
+        <i class="pip hidden"></i><i class="pip hidden"></i><i class="pip hidden"></i>
+        <i class="pip hidden"></i><i class="pip hidden"></i><i class="pip hidden"></i>
+      </div>
+    </div>
+    <button class="primary" id="rollBtn">Roll the dice</button>
+    <p class="last" id="lastResult" aria-live="polite">Click the dice or button to begin.</p>
+    <p class="last">Every roll is independent.</p>
+  </section>
+  <section class="card">
+    <div class="stats">
+      <div class="stat"><small>Total rolls</small><strong id="total">0</strong></div>
+      <div class="stat"><small>Last result</small><strong id="last">—</strong></div>
+      <div class="stat"><small>Expected chance</small><strong>16.67%</strong></div>
+    </div>
+    <h2 class="section-title">Probability distribution</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Dice face</th><th>Count</th><th>Theoretical</th><th>Experimental</th></tr></thead>
+        <tbody id="probabilityRows"></tbody>
+      </table>
+    </div>
+    <div class="note">
+      <strong>Theoretical probability</strong> stays constant at 1/6 (about 16.67%) for each face.<br>
+      <strong>Experimental probability</strong> is calculated from your actual rolls: count ÷ total rolls.
+    </div>
+  </section>
+</div>
+<section class="card graph-card">
+  <div class="graph-head">
+    <h2 class="section-title" style="margin:0">Experimental probability over time</h2>
+    <div class="legend"><span><i class="dot" style="background:var(--accent)"></i>Experimental</span><span><i class="dot" style="background:var(--blue)"></i>Theoretical</span></div>
+  </div>
+  <canvas id="chart" aria-label="Graph showing experimental probability of each dice face over time"></canvas>
+  <div class="note" id="lawText">Roll the die to start seeing how the experimental probabilities change.</div>
+  <div class="progress"><span id="progressBar"></span></div>
+  <div class="note" style="margin-top:8px">This is a demonstration, not a target to reach. The Law of Large Numbers says relative frequencies tend to settle near their theoretical probabilities over many independent trials; they do not have to become exactly equal.</div>
+</section>
+<div style="display:flex;justify-content:center;margin-top:18px"><button class="secondary" id="resetBtn">↻ Reset experiment</button></div>
+<p class="footer">Probability Lab · Fair six-sided die · Independent random rolls</p>
+</main>
+<script>
+const faces = ["⚀","⚁","⚂","⚃","⚄","⚅"];
+const counts = [0,0,0,0,0,0];
+let total = 0, lastRoll = null;
+const history = [];
+const die = document.getElementById('die');
+const pips = [...die.children];
+const positions = {
+  1:[4], 2:[0,8], 3:[0,4,8], 4:[0,2,6,8],
+  5:[0,2,4,6,8], 6:[0,2,3,5,6,8]
+};
+function showFace(n){
+  pips.forEach((pip,i)=>pip.classList.toggle('hidden',!positions[n].includes(i)));
+}
+function updateTable(){
+  const body = document.getElementById('probabilityRows');
+  body.innerHTML = counts.map((count,i)=>{
+    const experimental = total ? (count/total*100).toFixed(2)+'%' : '0.00%';
+    return `<tr><td><span class="face">${faces[i]}</span>${i+1}</td><td>${count}</td><td class="theory">16.67%</td><td class="experimental">${experimental}</td></tr>`;
+  }).join('');
+  document.getElementById('total').textContent = total.toLocaleString();
+  document.getElementById('last').textContent = lastRoll ?? '—';
+}
+function roll(){
+  const n = Math.floor(Math.random()*6)+1;
+  total++; counts[n-1]++; lastRoll=n;
+  history.push(counts.map(c=>c/total));
+  showFace(n);
+  die.classList.remove('rolling'); void die.offsetWidth; die.classList.add('rolling');
+  document.getElementById('lastResult').innerHTML = `You rolled a <strong>${n}</strong> ${faces[n-1]}`;
+  updateTable(); drawChart();
+  document.getElementById('lawText').textContent = total < 30
+    ? `You've rolled ${total} time${total===1?'':'s'}. With a small number of trials, experimental probabilities can fluctuate a lot.`
+    : `You've completed ${total.toLocaleString()} rolls. Watch whether the six experimental frequencies begin to settle around 16.67%.`;
+  document.getElementById('progressBar').style.width = (100*(1-Math.exp(-total/180))).toFixed(1)+'%';
+}
+function reset(){
+  counts.fill(0); total=0; lastRoll=null; history.length=0;
+  pips.forEach(p=>p.classList.add('hidden'));
+  document.getElementById('lastResult').textContent='Click the dice or button to begin.';
+  document.getElementById('lawText').textContent='Roll the die to start seeing how the experimental probabilities change.';
+  document.getElementById('progressBar').style.width='0%';
+  updateTable(); drawChart();
+}
+document.getElementById('rollBtn').addEventListener('click',roll);
+die.addEventListener('click',roll);
+die.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();roll();}});
+document.getElementById('resetBtn').addEventListener('click',reset);
+function drawChart(){
+  const canvas=document.getElementById('chart'), ctx=canvas.getContext('2d');
+  const dpr=window.devicePixelRatio||1, rect=canvas.getBoundingClientRect();
+  canvas.width=Math.max(300,rect.width*dpr); canvas.height=250*dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  const w=rect.width,h=250,left=42,right=12,top=12,bottom=30;
+  const cw=w-left-right,ch=h-top-bottom;
+  ctx.clearRect(0,0,w,h);
+  ctx.font='11px system-ui'; ctx.fillStyle='#9aabc2'; ctx.strokeStyle='#30415a'; ctx.lineWidth=1;
+  [0,0.1,0.2,0.3,0.4,0.5].forEach(v=>{
+    const y=top+ch-(v/0.5)*ch;
+    ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(w-right,y);ctx.stroke();
+    ctx.fillText(Math.round(v*100)+'%',4,y+4);
+  });
+  if(!history.length){ctx.fillStyle='#9aabc2';ctx.textAlign='center';ctx.fillText('Your results will appear here',left+cw/2,top+ch/2);ctx.textAlign='left';return;}
+  const colors=['#72e0c1','#7ca8ff','#f6c66b','#d69bff','#ff8f9b','#80d7ee'];
+  const stride=Math.max(1,Math.ceil(history.length/500));
+  for(let face=0;face<6;face++){
+    ctx.beginPath();ctx.strokeStyle=colors[face];ctx.lineWidth=2;
+    let started=false;
+    for(let i=0;i<history.length;i+=stride){
+      const x=left+(i/Math.max(1,history.length-1))*cw;
+      const y=top+ch-(Math.min(.5,history[i][face])/.5)*ch;
+      if(!started){ctx.moveTo(x,y);started=true;}else ctx.lineTo(x,y);
+    }
+    const i=history.length-1,x=left+(i/Math.max(1,history.length-1))*cw,y=top+ch-(Math.min(.5,history[i][face])/.5)*ch;
+    ctx.lineTo(x,y);ctx.stroke();
+  }
+  const target=1/6, y=top+ch-(target/.5)*ch;
+  ctx.save();ctx.setLineDash([6,5]);ctx.strokeStyle='#7ca8ff';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(w-right,y);ctx.stroke();ctx.restore();
+  ctx.fillStyle='#9aabc2';ctx.fillText('Rolls',left+cw/2,h-5);
+}
+window.addEventListener('resize',drawChart);
+updateTable();drawChart();
+</script>
+</body>
+</html>
